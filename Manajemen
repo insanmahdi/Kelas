@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Operasional Kedai</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans pb-12">
+
+    <!-- Header / Navbar -->
+    <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-indigo-700 p-2.5 rounded-lg shadow">
+                    <i class="fa-solid fa-store text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">Portal Operasional Kedai</h1>
+                    <p class="text-xs text-indigo-200">Manajemen Harian, Stok, & Meja Pelanggan</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="storeStatusBadge" class="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500 text-white shadow-sm">
+                    <i class="fa-solid fa-circle text-[8px] mr-1"></i> Kedai Buka
+                </span>
+                <button onclick="toggleStoreStatus()" class="bg-indigo-800 hover:bg-indigo-900 text-xs px-3 py-1.5 rounded-lg font-medium border border-indigo-600 transition shadow-sm">
+                    Ubah Status Buka/Tutup
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
+
+        <!-- 1. DASHBOARD RINGKASAN -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Status Operasional</p>
+                    <h3 id="dashStatusText" class="text-lg font-bold text-slate-800 mt-1">Buka Normal</h3>
+                </div>
+                <div class="bg-emerald-50 text-emerald-600 p-3 rounded-xl">
+                    <i class="fa-solid fa-door-open text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Jenis Bahan</p>
+                    <h3 id="dashTotalStock" class="text-lg font-bold text-slate-800 mt-1">0 Item</h3>
+                </div>
+                <div class="bg-blue-50 text-blue-600 p-3 rounded-xl">
+                    <i class="fa-solid fa-boxes-stacked text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Stok Kritis / Menipis</p>
+                    <h3 id="dashCriticalStock" class="text-lg font-bold text-amber-600 mt-1">0 Item</h3>
+                </div>
+                <div class="bg-amber-50 text-amber-600 p-3 rounded-xl">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Meja Kosong / Terisi</p>
+                    <h3 id="dashTableInfo" class="text-lg font-bold text-slate-800 mt-1">0 / 0 Meja</h3>
+                </div>
+                <div class="bg-indigo-50 text-indigo-600 p-3 rounded-xl">
+                    <i class="fa-solid fa-chair text-xl"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- NAVIGASI TAB MENU -->
+        <div class="flex border-b border-slate-200 overflow-x-auto gap-2">
+            <button onclick="switchTab('checklist')" id="btnTabChecklist" class="tab-btn px-4 py-2.5 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-600 whitespace-nowrap transition flex items-center gap-2">
+                <i class="fa-solid fa-list-check"></i> Checklist Operasional
+            </button>
+            <button onclick="switchTab('tables')" id="btnTabTables" class="tab-btn px-4 py-2.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 whitespace-nowrap transition flex items-center gap-2">
+                <i class="fa-solid fa-chair"></i> Status Meja & Pesanan
+            </button>
+            <button onclick="switchTab('stock')" id="btnTabStock" class="tab-btn px-4 py-2.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 whitespace-nowrap transition flex items-center gap-2">
+                <i class="fa-solid fa-box-archive"></i> Manajemen Stok
+            </button>
+        </div>
+
+        <!-- TAB 1: CHECKLIST OPERASIONAL -->
+        <div id="contentChecklist" class="tab-content space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">Progres Tugas Harian</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Selesaikan daftar tugas opening, service, dan closing kedai.</p>
+                </div>
+                <div class="w-full md:w-64">
+                    <div class="flex justify-between text-xs font-semibold mb-1 text-slate-600">
+                        <span id="progressText">0% Selesai</span>
+                        <button onclick="resetChecklist()" class="text-red-500 hover:underline">Reset Harian</button>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div id="progressBar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Opening -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2 text-indigo-600">
+                        <i class="fa-solid fa-sun"></i> 1. Opening Area
+                    </h3>
+                    <div id="checklistOpening" class="space-y-2.5"></div>
+                </div>
+                <!-- Service -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2 text-indigo-600">
+                        <i class="fa-solid fa-bell-concierge"></i> 2. Pelayanan (Service)
+                    </h3>
+                    <div id="checklistService" class="space-y-2.5"></div>
+                </div>
+                <!-- Closing -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2 text-indigo-600">
+                        <i class="fa-solid fa-moon"></i> 3. Closing Area
+                    </h3>
+                    <div id="checklistClosing" class="space-y-2.5"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: STATUS MEJA & PESANAN -->
+        <div id="contentTables" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">Manajemen Meja & Pesanan Aktif</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Pantau meja kosong, meja terisi, serta catatan pesanan pelanggan.</p>
+                </div>
+                <button onclick="openAddTableModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Tambah Meja Baru
+                </button>
+            </div>
+
+            <!-- Grid Meja -->
+            <div id="tablesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Data Meja Dirender Dinamis -->
+            </div>
+        </div>
+
+        <!-- TAB 3: MANAJEMEN STOK -->
+        <div id="contentStock" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">Inventaris Bahan Baku</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Kelola jumlah stok dan batas minimum peringatan barang habis.</p>
+                </div>
+                <button onclick="openAddStockModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Tambah Bahan Baru
+                </button>
+            </div>
+
+            <!-- Tabel Stok -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                                <th class="p-4">Nama Bahan</th>
+                                <th class="p-4">Stok Saat Ini</th>
+                                <th class="p-4">Satuan</th>
+                                <th class="p-4">Batas Minimum</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-center">Aksi Cepat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody" class="divide-y divide-slate-100">
+                            <!-- Data Stok Dirender Dinamis -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL TAMBAH BAHAN STOK -->
+    <div id="stockModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-xl overflow-hidden p-6 space-y-4">
+            <h3 class="text-lg font-bold text-slate-800">Tambah Bahan Baku Baru</h3>
+            <form id="stockForm" onsubmit="handleSaveStock(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Bahan</label>
+                    <input type="text" id="inputStockName" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-600" placeholder="Contoh: Biji Kopi Robusta">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Awal</label>
+                        <input type="number" id="inputStockQty" required min="0" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-600" placeholder="10">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Satuan</label>
+                        <input type="text" id="inputStockUnit" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-600" placeholder="Kg / Pcs / Pack">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Batas Minimum Peringatan</label>
+                    <input type="number" id="inputStockMin" required min="0" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-600" placeholder="3">
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeStockModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH MEJA -->
+    <div id="tableModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-xl overflow-hidden p-6 space-y-4">
+            <h3 class="text-lg font-bold text-slate-800">Tambah Meja Baru</h3>
+            <form id="tableForm" onsubmit="handleSaveTable(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor / Nama Meja</label>
+                    <input type="text" id="inputTableName" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-600" placeholder="Contoh: Meja 05">
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeTableModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL KELOLA PESANAN MEJA -->
+    <div id="orderModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow-xl overflow-hidden p-6 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 id="orderModalTitle" class="text-lg font-bold text-slate-800">Kelola Pesanan</h3>
+                <button onclick="closeOrderModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <input type="hidden" id="activeTableId">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan Pesanan / Menu</label>
+                    <textarea id="inputOrderNotes" rows="3" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-600" placeholder="Contoh: 2x Kopi Susu Aren, 1x Pisang Goreng"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                <button onclick="clearTableOrder()" class="px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition">Kosongkan Meja</button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeOrderModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Batal</button>
+                    <button onclick="saveTableOrder()" class="px-4 py-2 text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition">Simpan Pesanan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT UTAMA -->
+    <script>
+        // --- DATA AWAL & LOCALSTORAGE ---
+        let storeOpen = JSON.parse(localStorage.getItem('storeOpen')) ?? true;
+
+        const defaultChecklist = {
+            opening: [
+                { id: 'op1', text: 'Tiba 30 menit sebelum jam operasional', done: false },
+                { id: 'op2', text: 'Pembersihan area duduk & meja kedai', done: false },
+                { id: 'op3', text: 'Nyalakan sistem pencahayaan & audio', done: false },
+                { id: 'op4', text: 'Periksa kebersihan alat saji & bahan baku', done: false }
+            ],
+            service: [
+                { id: 'srv1', text: 'Sambut pelanggan dengan ramah & sigap', done: false },
+                { id: 'srv2', text: 'Catat pesanan pelanggan dengan teliti', done: false },
+                { id: 'srv3', text: 'Pastikan kualitas penyajian makanan & minuman', done: false }
+            ],
+            closing: [
+                { id: 'cl1', text: 'Pembersihan menyeluruh area & peralatan', done: false },
+                { id: 'cl2', text: 'Matikan peralatan elektronik & lampu tak terpakai', done: false },
+                { id: 'cl3', text: 'Amankan sisa stok bahan baku dengan benar', done: false },
+                { id: 'cl4', text: 'Kunci seluruh pintu & area kedai', done: false }
+            ]
+        };
+
+        let checklistData = JSON.parse(localStorage.getItem('checklistData')) || defaultChecklist;
+
+        let stockData = JSON.parse(localStorage.getItem('stockData')) || [
+            { id: 1, name: 'Biji Kopi Robusta', qty: 5, unit: 'Kg', min: 2 },
+            { id: 2, name: 'Susu Fresh Milk', qty: 2, unit: 'Liter', min: 3 },
+            { id: 3, name: 'Gula Aren Cair', qty: 4, unit: 'Botol', min: 2 },
+            { id: 4, name: 'Teh Celup Pilihan', qty: 1, unit: 'Box', min: 2 }
+        ];
+
+        let tablesData = JSON.parse(localStorage.getItem('tablesData')) || [
+            { id: 1, name: 'Meja 01', status: 'kosong', order: '' },
+            { id: 2, name: 'Meja 02', status: 'terisi', order: '2x Kopi Susu, 1x Roti Bakar' },
+            { id: 3, name: 'Meja 03', status: 'kosong', order: '' },
+            { id: 4, name: 'VIP 01', status: 'kosong', order: '' }
+        ];
+
+        // --- INISIALISASI APLIKASI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStoreStatusUI();
+            renderChecklist();
+            renderStockTable();
+            renderTablesGrid();
+            updateDashboard();
+        });
+
+        // --- NAVIGASI TAB ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('border-indigo-600', 'text-indigo-600');
+                el.classList.add('border-transparent', 'text-slate-500');
+            });
+
+            if (tabName === 'checklist') {
+                document.getElementById('contentChecklist').classList.remove('hidden');
+                document.getElementById('btnTabChecklist').classList.add('border-indigo-600', 'text-indigo-600');
+                document.getElementById('btnTabChecklist').classList.remove('border-transparent', 'text-slate-500');
+            } else if (tabName === 'tables') {
+                document.getElementById('contentTables').classList.remove('hidden');
+                document.getElementById('btnTabTables').classList.add('border-indigo-600', 'text-indigo-600');
+                document.getElementById('btnTabTables').classList.remove('border-transparent', 'text-slate-500');
+            } else if (tabName === 'stock') {
+                document.getElementById('contentStock').classList.remove('hidden');
+                document.getElementById('btnTabStock').classList.add('border-indigo-600', 'text-indigo-600');
+                document.getElementById('btnTabStock').classList.remove('border-transparent', 'text-slate-500');
+            }
+        }
+
+        // --- STATUS KEDAI ---
+        function toggleStoreStatus() {
+            storeOpen = !storeOpen;
+            localStorage.setItem('storeOpen', JSON.stringify(storeOpen));
+            updateStoreStatusUI();
+            updateDashboard();
+        }
+
+        function updateStoreStatusUI() {
+            const badge = document.getElementById('storeStatusBadge');
+            const dashText = document.getElementById('dashStatusText');
+            if (storeOpen) {
+                badge.className = "px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500 text-white shadow-sm";
+                badge.innerHTML = '<i class="fa-solid fa-circle text-[8px] mr-1"></i> Kedai Buka';
+                dashText.innerText = "Buka Normal";
+            } else {
+                badge.className = "px-3 py-1 text-xs font-semibold rounded-full bg-red-500 text-white shadow-sm";
+                badge.innerHTML = '<i class="fa-solid fa-circle text-[8px] mr-1"></i> Kedai Tutup';
+                dashText.innerText = "Tutup / Istirahat";
+            }
+        }
+
+        // --- DASHBOARD UPDATE ---
+        function updateDashboard() {
+            document.getElementById('dashTotalStock').innerText = stockData.length + ' Item';
+            const criticalCount = stockData.filter(item => item.qty <= item.min).length;
+            document.getElementById('dashCriticalStock').innerText = criticalCount + ' Item';
+
+            const totalTables = tablesData.length;
+            const filledTables = tablesData.filter(t => t.status === 'terisi').length;
+            const emptyTables = totalTables - filledTables;
+            document.getElementById('dashTableInfo').innerText = `${emptyTables} Kosong / ${filledTables} Terisi`;
+        }
+
+        // --- CHECKLIST LOGIC ---
+        function renderChecklist() {
+            renderChecklistCategory('opening', 'checklistOpening');
+            renderChecklistCategory('service', 'checklistService');
+            renderChecklistCategory('closing', 'checklistClosing');
+            updateProgress();
+        }
+
+        function renderChecklistCategory(categoryKey, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            checklistData[categoryKey].forEach(item => {
+                const div = document.createElement('label');
+                div.className = "flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition text-sm";
+                div.innerHTML = `
+                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklistItem('${categoryKey}', '${item.id}')" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                    <span class="${item.done ? 'line-through text-slate-400' : 'text-slate-700'}">${item.text}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleChecklistItem(category, id) {
+            const item = checklistData[category].find(i => i.id === id);
+            if (item) {
+                item.done = !item.done;
+                localStorage.setItem('checklistData', JSON.stringify(checklistData));
+                renderChecklist();
+            }
+        }
+
+        function updateProgress() {
+            let total = 0;
+            let completed = 0;
+            ['opening', 'service', 'closing'].forEach(cat => {
+                checklistData[cat].forEach(i => {
+                    total++;
+                    if (i.done) completed++;
+                });
+            });
+            const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+            document.getElementById('progressBar.style').width = percent + '%';
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').innerText = percent + '% Selesai';
+        }
+
+        function resetChecklist() {
+            ['opening', 'service', 'closing'].forEach(cat => {
+                checklistData[cat].forEach(i => i.done = false);
+            });
+            localStorage.setItem('checklistData', JSON.stringify(checklistData));
+            renderChecklist();
+        }
+
+        // --- MANAJEMEN STOK LOGIC ---
+        function renderStockTable() {
+            const tbody = document.getElementById('stockTableBody');
+            tbody.innerHTML = '';
+
+            stockData.forEach(item => {
+                const isCritical = item.qty <= item.min;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="p-4 font-medium text-slate-800">${item.name}</td>
+                    <td class="p-4 font-semibold ${isCritical ? 'text-amber-600' : 'text-slate-700'}">${item.qty}</td>
+                    <td class="p-4 text-slate-500">${item.unit}</td>
+                    <td class="p-4 text-slate-500">${item.min}</td>
+                    <td class="p-4">
+                        ${isCritical 
+                            ? '<span class="px-2.5 py-1 text-[10px] font-bold bg-amber-50 text-amber-600 rounded-full border border-amber-200">Stok Menipis</span>' 
+                            : '<span class="px-2.5 py-1 text-[10px] font-bold bg-emerald-50 text-emerald-600 rounded-full border border-emerald-200">Aman</span>'}
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="inline-flex items-center gap-1">
+                            <button onclick="adjustStock(${item.id}, -1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition">-</button>
+                            <button onclick="adjustStock(${item.id}, 1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition">+</button>
+                            <button onclick="deleteStock(${item.id})" class="w-7 h-7 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg ml-2 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            updateDashboard();
+        }
+
+        function openAddStockModal() {
+            document.getElementById('stockForm').reset();
+            document.getElementById('stockModal').classList.remove('hidden');
+        }
+
+        function closeStockModal() {
+            document.getElementById('stockModal').classList.add('hidden');
+        }
+
+        function handleSaveStock(e) {
+            e.preventDefault();
+            const name = document.getElementById('inputStockName').value;
+            const qty = parseInt(document.getElementById('inputStockQty').value);
+            const unit = document.getElementById('inputStockUnit').value;
+            const min = parseInt(document.getElementById('inputStockMin').value);
+
+            const newItem = {
+                id: Date.now(),
+                name,
+                qty,
+                unit,
+                min
+            };
+
+            stockData.push(newItem);
+            localStorage.setItem('stockData', JSON.stringify(stockData));
+            renderStockTable();
+            closeStockModal();
+        }
+
+        function adjustStock(id, amount) {
+            const item = stockData.find(i => i.id === id);
+            if (item) {
+                item.qty = Math.max(0, item.qty + amount);
+                localStorage.setItem('stockData', JSON.stringify(stockData));
+                renderStockTable();
+            }
+        }
+
+        function deleteStock(id) {
+            stockData = stockData.filter(i => i.id !== id);
+            localStorage.setItem('stockData', JSON.stringify(stockData));
+            renderStockTable();
+        }
+
+        // --- MANAJEMEN MEJA & PESANAN LOGIC ---
+        function renderTablesGrid() {
+            const grid = document.getElementById('tablesGrid');
+            grid.innerHTML = '';
+
+            tablesData.forEach(table => {
+                const isFilled = table.status === 'terisi';
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-xl border transition shadow-sm flex flex-col justify-between ${isFilled ? 'bg-amber-50/40 border-amber-200' : 'bg-white border-slate-100'}`;
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-slate-800 text-base">${table.name}</h3>
+                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-full ${isFilled ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">
+                                ${isFilled ? 'Terisi' : 'Kosong'}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4 min-h-[32px]">
+                            <strong class="text-slate-700">Pesanan:</strong> ${table.order ? table.order : 'Belum ada pesanan'}
+                        </p>
+                    </div>
+                    <div class="flex gap-2 pt-3 border-t border-slate-100/80">
+                        <button onclick="openOrderModal(${table.id})" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 rounded-lg transition shadow-sm">
+                            Kelola Pesanan
+                        </button>
+                        <button onclick="deleteTable(${table.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg transition">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            updateDashboard();
+        }
+
+        function openAddTableModal() {
+            document.getElementById('tableForm').reset();
+            document.getElementById('tableModal').classList.remove('hidden');
+        }
+
+        function closeTableModal() {
+            document.getElementById('tableModal').classList.add('hidden');
+        }
+
+        function handleSaveTable(e) {
+            e.preventDefault();
+            const name = document.getElementById('inputTableName').value;
+
+            const newTable = {
+                id: Date.now(),
+                name,
+                status: 'kosong',
+                order: ''
+            };
+
+            tablesData.push(newTable);
+            localStorage.setItem('tablesData', JSON.stringify(tablesData));
+            renderTablesGrid();
+            closeTableModal();
+        }
+
+        function openOrderModal(id) {
+            const table = tablesData.find(t => t.id === id);
+            if (table) {
+                document.getElementById('activeTableId').value = table.id;
+                document.getElementById('orderModalTitle').innerText = `Kelola Pesanan - ${table.name}`;
+                document.getElementById('inputOrderNotes').value = table.order;
+                document.getElementById('orderModal').classList.remove('hidden');
+            }
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.add('hidden');
+        }
+
+        function saveTableOrder() {
+            const id = parseInt(document.getElementById('activeTableId').value);
+            const notes = document.getElementById('inputOrderNotes').value.trim();
+            const table = tablesData.find(t => t.id === id);
+
+            if (table) {
+                table.order = notes;
+                table.status = notes ? 'terisi' : 'kosong';
+                localStorage.setItem('tablesData', JSON.stringify(tablesData));
+                renderTablesGrid();
+                closeOrderModal();
+            }
+        }
+
+        function clearTableOrder() {
+            const id = parseInt(document.getElementById('activeTableId').value);
+            const table = tablesData.find(t => t.id === id);
+
+            if (table) {
+                table.order = '';
+                table.status = 'kosong';
+                localStorage.setItem('tablesData', JSON.stringify(tablesData));
+                renderTablesGrid();
+                closeOrderModal();
+            }
+        }
+
+        function deleteTable(id) {
+            tablesData = tablesData.filter(t => t.id !== id);
+            localStorage.setItem('tablesData', JSON.stringify(tablesData));
+            renderTablesGrid();
+        }
+    </script>
+</body>
+</html>
